@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<dbml>
+	<tables>
+		<remove name="dbo.CustomerCustomerDemo" />
+		<remove name="dbo.CustomerDemographics" />
+		<rename name="dbo.Employees" type="Emp" member="Emps" />
+    </tables>
+	<associations>
+		<rename name="FK_Employees_Employees" fkMember="Boss" pluralMember="DirectReports" />
+    </associations>
+</dbml>
