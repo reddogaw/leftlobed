@@ -6,6 +6,7 @@ param
 	$CODE = $null,
 	[string]$SERVER = ".",
 	[boolean]$VIEWS = $FALSE,
+	[string]$ENTITYBASE = "System.Object",
 	[string]$NAMESPACE = ($DATABASE + ".Domain"), # Would like to do some sneaky stuff to get the organisation
 	$CLEANERXML = $null, # Indicates and input XML file to use for cleaning DBML file
 	$FUNCTIONLIBRARYPATH = $pwd # Indicates a path from current working directory to the function library scripts
@@ -25,9 +26,9 @@ New-Item -Path $DBML -type file -Force | Out-Null;
 # Generate original DBML file
 # NOTE: Couldn't work out how to get the arguments to pass in as a variable string. PowerShell seems to mess with the formatting.
 if ($VIEWS)
-{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /views) | Write-Debug }
+{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE /views) | Write-Debug }
 else
-{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML) | Write-Debug } 
+{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE) | Write-Debug } 
 
 Check-LastExitCode -CleanupScript { Throw "SqlMetal DBML file generation failed.`n`nCall stack:`n`n$(Get-CallStack)"; }
 
