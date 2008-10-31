@@ -1,6 +1,7 @@
 param
 (
-	[string]$DATABASE = @(Throw "Database parameter must be provided."),
+	[string]$CONN = $null,
+	[string]$DATABASE = $null,
 	[string]$CONTEXT = ($DATABASE + "DataContext"),
 	$DBML = (Join-Path -Path (Join-Path -Path $PWD -ChildPath "Domain") -ChildPath ($CONTEXT + ".dbml")),
 	$CODE = $null,
@@ -11,6 +12,11 @@ param
 	$CLEANERXML = $null, # Indicates and input XML file to use for cleaning DBML file
 	$FUNCTIONLIBRARYPATH = $pwd # Indicates a path from current working directory to the function library scripts
 )
+
+if ([String]::IsNullOrEmpty($CONN) -and [String]::IsNullOrEmpty($DATABASE))
+{
+	Throw "The 'database' or 'conn' parameter must be provided."
+}
 
 # Replace with value of SilentlyContinue to hide debug messages including SqlMetal.exe output.
 $DebugPreference = "Continue";
@@ -25,10 +31,20 @@ New-Item -Path $DBML -type file -Force | Out-Null;
 
 # Generate original DBML file
 # NOTE: Couldn't work out how to get the arguments to pass in as a variable string. PowerShell seems to mess with the formatting.
-if ($VIEWS)
-{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE /views) | Write-Debug }
+if ([String]::IsNullOrEmpty($CONN))
+{
+	if ($VIEWS)
+	{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE /views) | Write-Debug }
+	else
+	{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE) | Write-Debug } 
+}
 else
-{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE) | Write-Debug } 
+{
+	if ($VIEWS)
+	{ (& sqlmetal /conn:$CONN /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE /views) | Write-Debug }
+	else
+	{ (& sqlmetal /conn:$CONN /pluralize /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE) | Write-Debug } 
+}
 
 Check-LastExitCode -CleanupScript { Throw "SqlMetal DBML file generation failed.`n`nCall stack:`n`n$(Get-CallStack)"; }
 
