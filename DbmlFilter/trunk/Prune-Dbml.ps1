@@ -1,7 +1,7 @@
 param
 (
 	$DBML = @(Throw "Input DBML file path parameter must be specified"),
-	[array]$REMOVETABLES = @(),
+	[hashtable]$REMOVETABLES = @{},
 	[hashtable]$RENAMETABLES = @{},
 	[hashtable]$RENAMEASSOCIATIONS = @{}
 )
@@ -41,13 +41,16 @@ function Count-Associations ([xml]$doc)
 Write-Debug ("Was - " + (Count-Tables($doc)) + " tables in generated DBML");
 Write-Debug ("Was - " + (Count-Associations($doc)) + " associations in generated DBML");
 
+#$REMOVETABLES.Keys | ForEach-Object { Write-Debug $_ };
+#Write-Debug ("Contains " + $REMOVETABLES.Contains("TdsLevel"));
+
 # Remove nodes that don't belong
 # Also, put any hits into a collection for fixing up associations later
 [int]$local:count = 0;
 $removedTypeMap = @{};
 $tableNodesRemoved = $doc.Database.Table `
 					| ForEach-Object { $_; } `
-					| Where-Object { $REMOVETABLES -contains $_.Name } `
+					| Where-Object { $REMOVETABLES.Contains($_.Name) } `
 					| ForEach-Object `
 					  { `
 					  	$removedTypeMap.Add($_.Type.Name, $_.Name); `
@@ -64,6 +67,8 @@ $associationNodesWithTypesRemoved = $doc.Database.Table `
 					| Where-Object { $_.Type.Association -ne $null } `
 					| ForEach-Object { $_.Type.Association; } `
 					| Where-Object { $removedTypeMap[$_.Type] -ne $null } `
+					| ForEach-Object { $_ } `
+					| Where-Object {  $REMOVETABLES[$removedTypeMap[$_.Type]] -eq $null } `
 					| ForEach-Object `
 					  { `
 					  	$_ = $_.get_ParentNode().RemoveChild($_); `
@@ -72,6 +77,23 @@ $associationNodesWithTypesRemoved = $doc.Database.Table `
 					  };
 
 Write-Debug ("Removed - " + $count + " additional associations for removed tables from generated DBML");
+
+# Rename the types of any associations on other tables which reference a removed type
+$count = 0;
+$associationNodesWithTypesRemovedButRenamed = $doc.Database.Table `
+					| Where-Object { $_.Type.Association -ne $null } `
+					| ForEach-Object { $_.Type.Association; } `
+					| Where-Object { $removedTypeMap[$_.Type] -ne $null } `
+					| ForEach-Object { $_ } `
+					| Where-Object {  $REMOVETABLES[$removedTypeMap[$_.Type]] -ne $null } `
+					| ForEach-Object `
+					  { `
+					  	$_.Type = $REMOVETABLES[$removedTypeMap[$_.Type]]; `
+						$count = $count + 1; `
+						$_; `
+					  };
+
+Write-Debug ("Fixed - " + $count + " additional associations for removed tables from generated DBML");
 
 # Find nodes for tables which need to be renamed
 $count = 0;
