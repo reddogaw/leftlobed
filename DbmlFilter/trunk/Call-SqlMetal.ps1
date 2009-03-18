@@ -82,6 +82,7 @@ if (-not [String]::IsNullOrEmpty($CLEANERXML))
 						-removeTables $CleanerOutput["RemoveTables"] `
 						-renameTables $CleanerOutput["RenameTables"] `
 						-renameAssociations $CleanerOutput["RenameAssociations"] `
+						-keepSchemaNames $CleanerOutput["KeepSchemaNames"] `
 						| Out-File -FilePath ($DBML + ".tmp");
 		
 		Move-Item -Path ($DBML + ".tmp") -Destination $DBML -Force;

@@ -3,7 +3,8 @@ param
 	$DBML = @(Throw "Input DBML file path parameter must be specified"),
 	[hashtable]$REMOVETABLES = @{},
 	[hashtable]$RENAMETABLES = @{},
-	[hashtable]$RENAMEASSOCIATIONS = @{}
+	[hashtable]$RENAMEASSOCIATIONS = @{},
+	[bool]$KEEPSCHEMANAMES = $true
 )
 
 if (-not (Test-Path ($DBML)))
@@ -40,6 +41,7 @@ function Count-Associations ([xml]$doc)
 
 Write-Debug ("Was - " + (Count-Tables($doc)) + " tables in generated DBML");
 Write-Debug ("Was - " + (Count-Associations($doc)) + " associations in generated DBML");
+Write-Debug ("Need to clean table names? " + -not ($KEEPSCHEMANAMES));
 
 #$REMOVETABLES.Keys | ForEach-Object { Write-Debug $_ };
 #Write-Debug ("Contains " + $REMOVETABLES.Contains("TdsLevel"));
@@ -190,6 +192,31 @@ $associationSubsetNodesRenamed = $doc.Database.Table `
 					  };
 
 Write-Debug ("Renamed - " + $count + " associations with named subset members from generated DBML");
+
+function Remove-TableSchemaName([string]$tableName)
+{
+	$local:i = $tableName.LastIndexOf(".");
+	if ($i -ge 0 -and $i -lt $tableName.Length - 1)
+	{
+		return $tableName.Substring($i + 1);
+	}
+	elseif ($i -eq $tableName.Length)
+	{
+		return [System.String]::Empty;
+	}
+	return $tableName;
+}
+
+if (-not ($KEEPSCHEMANAMES))
+{
+	$doc.Database.Table `
+		| Where-Object { $_.Name -ne $null } `
+		| ForEach-Object `
+		{ `
+			$local:name = Remove-TableSchemaName -tableName $_.Name;
+			$_.Name = "$name"; `
+		}
+}
 
 Write-Debug ("Now - " + (Count-Tables($doc)) + " tables in generated DBML");
 Write-Debug ("Now - " + (Count-Associations($doc)) + " associations in generated DBML");

@@ -9,6 +9,12 @@ $xmlFileInfo = Get-Item -path $CLEANERXML;
 
 [xml]$doc = Read-Xml $xmlFileInfo;
 
+$KeepSchemaNames = $true;
+if ($doc.Dbml.Tables.KeepSchemaNames -ne $null)
+{
+	$KeepSchemaNames = [System.Boolean]::Parse($doc.Dbml.Tables.KeepSchemaNames);
+}
+
 # Simple array of names of tables to remove.
 $Remove = @{};
 $temp = $doc.Dbml.Tables.Remove `
@@ -31,5 +37,5 @@ $temp = $doc.Dbml.Associations.Rename `
 		| Where-Object { $_.Name -ne $null } `
 		| ForEach-Object { $FixUp.Add($_.Name, @{ FKMember = $_.FKMember; PluralMember = $_.PluralMember }) };
 
-$Output = @{RemoveTables = $Remove; RenameTables = $Rename; RenameAssociations = $FixUp;};
+$Output = @{KeepSchemaNames = $KeepSchemaNames; RemoveTables = $Remove; RenameTables = $Rename; RenameAssociations = $FixUp;};
 return $Output;
