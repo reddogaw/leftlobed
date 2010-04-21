@@ -7,7 +7,7 @@ param
 	$CODE = $null,
 	[string]$SERVER = ".",
 	[boolean]$VIEWS = $FALSE,
-	[string]$ENTITYBASE = "System.Object",
+	[string]$ENTITYBASE = $null,
 	[string]$NAMESPACE = ($DATABASE + ".Domain"), # Would like to do some sneaky stuff to get the organisation
 	$CLEANERXML = $null, # Indicates and input XML file to use for cleaning DBML file
 	$FUNCTIONLIBRARYPATH = $pwd # Indicates a path from current working directory to the function library scripts
@@ -34,16 +34,16 @@ New-Item -Path $DBML -type file -Force | Out-Null;
 if ([String]::IsNullOrEmpty($CONN))
 {
 	if ($VIEWS)
-	{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /serialization:Unidirectional /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE /views) | Write-Debug }
+	{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /serialization:Unidirectional /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /views) | Write-Debug }
 	else
-	{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /serialization:Unidirectional /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE) | Write-Debug } 
+	{ (& sqlmetal /server:$SERVER /database:$DATABASE /pluralize /serialization:Unidirectional /namespace:$NAMESPACE /context:$CONTEXT /dbml:$DBML) | Write-Debug } 
 }
 else
 {
 	if ($VIEWS)
-	{ (& sqlmetal /conn:$CONN /pluralize /namespace:$NAMESPACE /serialization:Unidirectional /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE /views) | Write-Debug }
+	{ (& sqlmetal /conn:$CONN /pluralize /namespace:$NAMESPACE /serialization:Unidirectional /context:$CONTEXT /dbml:$DBML /views) | Write-Debug }
 	else
-	{ (& sqlmetal /conn:$CONN /pluralize /namespace:$NAMESPACE /serialization:Unidirectional /context:$CONTEXT /dbml:$DBML /entitybase:$ENTITYBASE) | Write-Debug } 
+	{ (& sqlmetal /conn:$CONN /pluralize /namespace:$NAMESPACE /serialization:Unidirectional /context:$CONTEXT /dbml:$DBML) | Write-Debug } 
 }
 
 Check-LastExitCode -CleanupScript { Throw "SqlMetal DBML file generation failed.`n`nCall stack:`n`n$(Get-CallStack)"; }
@@ -83,6 +83,7 @@ if (-not [String]::IsNullOrEmpty($CLEANERXML))
 						-renameTables $CleanerOutput["RenameTables"] `
 						-renameAssociations $CleanerOutput["RenameAssociations"] `
 						-keepSchemaNames $CleanerOutput["KeepSchemaNames"] `
+						-entityBase $ENTITYBASE `
 						| Out-File -FilePath ($DBML + ".tmp");
 		
 		Move-Item -Path ($DBML + ".tmp") -Destination $DBML -Force;

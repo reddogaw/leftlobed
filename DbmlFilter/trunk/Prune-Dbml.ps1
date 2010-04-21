@@ -4,6 +4,7 @@ param
 	[hashtable]$REMOVETABLES = @{},
 	[hashtable]$RENAMETABLES = @{},
 	[hashtable]$RENAMEASSOCIATIONS = @{},
+	[string]$ENTITYBASE = $null,
 	[bool]$KEEPSCHEMANAMES = $true
 )
 
@@ -42,6 +43,16 @@ function Count-Associations ([xml]$doc)
 Write-Debug ("Was - " + (Count-Tables($doc)) + " tables in generated DBML");
 Write-Debug ("Was - " + (Count-Associations($doc)) + " associations in generated DBML");
 Write-Debug ("Need to clean table names? " + -not ($KEEPSCHEMANAMES));
+
+# Set the EntityBase attribute into the DBML if defined in parameter
+if (-not [String]::IsNullOrEmpty($ENTITYBASE))
+{
+	$doc.Database.SetAttribute("EntityBase", $ENTITYBASE);
+}
+elseif ($doc.Database.EntityBase -ne $null)
+{
+	$doc.Database.RemoveChild($doc.Database.EntityBase);
+}
 
 #$REMOVETABLES.Keys | ForEach-Object { Write-Debug $_ };
 #Write-Debug ("Contains " + $REMOVETABLES.Contains("TdsLevel"));
