@@ -182,7 +182,14 @@ $associationFKNodesRenamed = $doc.Database.Table `
 					| Where-Object { $RENAMEASSOCIATIONS[$_.Name] -ne $null -and $_.IsForeignKey -eq "true"} `
 					| ForEach-Object `
 					  { `
-					  	$_.Member = $RENAMEASSOCIATIONS[$_.Name].FKMember; `
+					  	if (-not [String]::IsNullOrEmpty($RENAMEASSOCIATIONS[$_.Name].FKMember)) `
+						{ `
+					  	  $_.Member = $RENAMEASSOCIATIONS[$_.Name].FKMember; `
+						} `
+						else `
+						{ `
+						  $_ = $_.get_ParentNode().RemoveChild($_); `
+						} `
 						$count = $count + 1; `
 						$_; `
 					  };
@@ -194,10 +201,17 @@ $count = 0;
 $associationSubsetNodesRenamed = $doc.Database.Table `
 					| Where-Object { $_.Type.Association -ne $null } `
 					| ForEach-Object { $_.Type.Association; } `
-					| Where-Object { $RENAMEASSOCIATIONS[$_.Name] -ne $null -and $_.IsForeignKey -eq $null} `
+					| Where-Object { $RENAMEASSOCIATIONS[$_.Name] -ne $null -and $_.IsForeignKey -eq $null } `
 					| ForEach-Object `
 					  { `
-					  	$_.Member = $RENAMEASSOCIATIONS[$_.Name].PluralMember; `
+						if (-not [String]::IsNullOrEmpty($RENAMEASSOCIATIONS[$_.Name].PluralMember)) `
+						{ `
+						  $_.Member = $RENAMEASSOCIATIONS[$_.Name].PluralMember; `
+						} `
+						else `
+						{ `
+						  $_ = $_.get_ParentNode().RemoveChild($_); `
+						} `
 						$count = $count + 1; `
 						$_; `
 					  };
