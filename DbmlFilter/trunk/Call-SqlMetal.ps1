@@ -9,6 +9,7 @@ param
 	[boolean]$VIEWS = $FALSE,
 	[string]$ENTITYBASE = $null,
 	[string]$NAMESPACE = ($DATABASE + ".Domain"), # Would like to do some sneaky stuff to get the organisation
+    [string]$ACCESSMODIFIER = $null,
 	$CLEANERXML = $null, # Indicates and input XML file to use for cleaning DBML file
 	$FUNCTIONLIBRARYPATH = $pwd # Indicates a path from current working directory to the function library scripts
 )
@@ -84,6 +85,7 @@ if (-not [String]::IsNullOrEmpty($CLEANERXML))
 						-renameAssociations $CleanerOutput["RenameAssociations"] `
 						-keepSchemaNames $CleanerOutput["KeepSchemaNames"] `
 						-entityBase $ENTITYBASE `
+                        -accessModifier $ACCESSMODIFIER `
 						| Out-File -FilePath ($DBML + ".tmp");
 		
 		Move-Item -Path ($DBML + ".tmp") -Destination $DBML -Force;

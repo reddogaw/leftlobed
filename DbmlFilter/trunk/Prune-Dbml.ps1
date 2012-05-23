@@ -5,6 +5,7 @@ param
 	[hashtable]$RENAMETABLES = @{},
 	[hashtable]$RENAMEASSOCIATIONS = @{},
 	[string]$ENTITYBASE = $null,
+    [string]$ACCESSMODIFIER = $null,
 	[bool]$KEEPSCHEMANAMES = $true
 )
 
@@ -52,6 +53,11 @@ if (-not [String]::IsNullOrEmpty($ENTITYBASE))
 elseif ($doc.Database.EntityBase -ne $null)
 {
 	$doc.Database.RemoveChild($doc.Database.EntityBase);
+}
+
+if (-not [String]::IsNullOrEmpty($ACCESSMODIFIER))
+{
+	$doc.Database.SetAttribute("AccessModifier", $ACCESSMODIFIER);
 }
 
 #$REMOVETABLES.Keys | ForEach-Object { Write-Debug $_ };
